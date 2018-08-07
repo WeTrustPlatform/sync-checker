@@ -1,37 +1,35 @@
 #!/bin/bash
 # A simple shell script to check if node is out of sync with ethereum
 # If node is out of sync, user will be notified by OpsGenie
-# Using crontab command: `*/10 * * * * /home/foo/outOfSyncNoti.sh 'rinkeby' 'opsgeniekeyhere' >> /home/foo/nodeSync.log 2>&1` to run this script every 10 mins.
+# Using crontab command:
+# */10 * * * * /home/foo/outOfSyncNoti.sh 'rinkeby' '8545' 'opsgeniekeyhere' >> /home/foo/nodeSync.log 2>&1`
+# to run this script every 10 mins.
 
-network=$1
-port=$2
-genieKey=$3
-threshold=${4:-200}
+network=$1           # ethereum network in letters
+port=$2              # local geth port
+genieKey=$3          # opsgenie key
+threshold=${4:-200}  # number of blocks behind
 
 # Get current node block number
-curBlock=$(eval geth --exec "eth.blockNumber" attach http://localhost:$port)
-if [ "$?" = "1" ]; then
+curBlock=$(geth --exec "eth.blockNumber" attach http://localhost:${port})
+if [ $? -ne 0 ]; then
   curBlock=0
 fi
 
 # Get latest block number from etherscan
-# If on mainnet
-if [ "$network" == "mainnet" ]; then
-  res=$(curl -X GET "https://api.etherscan.io/api?module=proxy&action=eth_blockNumber" | grep -Eo '"result":.*?[^\\]"' | cut -d \: -f 2 | cut -d \" -f 2)
-# If on testnet
-else
-  res=$(curl -X GET "https://api-rinkeby.etherscan.io/api?module=proxy&action=eth_blockNumber" | grep -Eo '"result":.*?[^\\]"' | cut -d \: -f 2 | cut -d \" -f 2)
+etherscanDomain="api.etherscan.io"
+if [ "$network" == "rinkeby" ]; then
+  etherscanDomain="api-rinkeby.etherscan.io"
 fi
 
-ethBlock=$(($res))
+ethBlock=$(curl -X GET "https://${etherscanDomain}/api?module=proxy&action=eth_blockNumber" | grep -Eo '"result":.*?[^\\]"' | cut -d \: -f 2 | cut -d \" -f 2)
 
 echo "latest block number from etherscan: $ethBlock"
-echo "Our current block number: $curBlock"
+echo "latest block number from localhost:${port} : $curBlock"
 
 # Check if node is out of sync.
 # Will send notification when current block number is <threshold> blocks behind latest block on etherscan.
-lowestBlock=$(($ethBlock-$threshold))
-if [ $curBlock -lt $lowestBlock ];then
+if [ $(( ${ethBlock} - ${curBlock} )) -ge $threshold ]; then
   systemctl restart geth
   curl -X POST https://api.opsgenie.com/v2/alerts -H "Content-Type: application/json" -H "Authorization: GenieKey $genieKey" -d '{ "message": "Our block is out of sync." }'
   echo ""
