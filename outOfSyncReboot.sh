@@ -29,7 +29,7 @@ echo "latest block number from localhost:${port} : $curBlock";
 
 # Check if node is out of sync.
 # Will reboot service when current block number is <threshold> blocks behind latest block on etherscan.
-if [[ $(( (${ethBlock} - ${curBlock} )) -ge $threshold) && (curBlock -ne 0) ]]; then
+if [[ ( $(( ${ethBlock} - ${curBlock} )) -ge $threshold ) && ( curBlock -ne 0 ) ]]; then
   systemctl restart ${serviceName};
   echo "";
 fi;
