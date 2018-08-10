@@ -8,7 +8,7 @@
 network=$1;           # ethereum network in letters
 port=$2;              # local geth port
 serviceName=$3;       # name of the systemd service to restart
-threshold=${5:200};   # number of blocks behind
+threshold=${4:200};   # number of blocks behind
 
 # Get current node block number
 curBlock=$(geth --exec "eth.blockNumber" attach http://localhost:${port});
@@ -29,7 +29,7 @@ echo "latest block number from localhost:${port} : $curBlock";
 
 # Check if node is out of sync.
 # Will reboot service when current block number is <threshold> blocks behind latest block on etherscan.
-if [ $(( ${ethBlock} - ${curBlock} )) -ge $threshold ]; then
+if [[ $(( (${ethBlock} - ${curBlock} )) -ge $threshold) && (curBlock -ne 0) ]]; then
   systemctl restart ${serviceName};
   echo "";
 fi;
