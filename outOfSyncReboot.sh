@@ -22,7 +22,7 @@ if [ "$network" == "rinkeby" ]; then
   etherscanDomain="api-rinkeby.etherscan.io";
 fi;
 
-ethBlock=$(curl -X GET "https://${etherscanDomain}/api?module=proxy&action=eth_blockNumber" | grep -Eo '"result":.*?[^\\]"' | cut -d \: -f 2 | cut -d \" -f 2);
+ethBlock=$(( $(curl -s -X GET "https://${etherscanDomain}/api?module=proxy&action=eth_blockNumber" | grep -Eo '"result":.*?[^\\]"' | cut -d \: -f 2 | cut -d \" -f 2) ));
 
 echo "latest block number from etherscan: $ethBlock";
 echo "latest block number from localhost:${port} : $curBlock";
