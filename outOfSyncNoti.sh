@@ -23,15 +23,14 @@ if [ "$network" == "rinkeby" ]; then
   etherscanDomain="api-rinkeby.etherscan.io"
 fi
 
-ethBlock=$(curl -X GET "https://${etherscanDomain}/api?module=proxy&action=eth_blockNumber" | grep -Eo '"result":.*?[^\\]"' | cut -d \: -f 2 | cut -d \" -f 2)
+ethBlock=$(( $(curl -s -X GET "https://${etherscanDomain}/api?module=proxy&action=eth_blockNumber" | grep -Eo '"result":.*?[^\\]"' | cut -d \: -f 2 | cut -d \" -f 2) ));
 
 echo "latest block number from etherscan: $ethBlock"
 echo "latest block number from localhost:${port} : $curBlock"
 
 # Check if node is out of sync.
 # Will send notification when current block number is <threshold> blocks behind latest block on etherscan.
-if [ $(( ${ethBlock} - ${curBlock} )) -ge $threshold ]; then
-  systemctl restart ${serviceName}
+if [[ ( $(( ${ethBlock} - ${curBlock} )) -ge $threshold ) && ( curBlock -ne 0 ) ]]; then
   curl -X POST https://api.opsgenie.com/v2/alerts -H "Content-Type: application/json" -H "Authorization: GenieKey $genieKey" -d '{ "message": "Our block is out of sync." }'
   echo ""
 fi
