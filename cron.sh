@@ -35,10 +35,10 @@ echo "latest block number from localhost:${port} : $curBlock"
 # Will send notification when current block number is <threshold> blocks behind latest block on etherscan.
 if [[ ( $(( ${ethBlock} - ${curBlock} )) -ge $threshold ) && ( curBlock -ne 0 ) ]]; then
   if [[ -n $slackHook ]]; then
-    curl -s -X POST -H 'Content-type: application/json' --data "{\"text\": \"Our block is out of sync on ${network}.\"}" "$slackHook"
+    curl -s -X POST -H 'Content-type: application/json' --data "{\"text\": \"Our block is out of sync on ${network} on ${HOSTNAME}.\"}" "$slackHook"
   fi
   if [[ -n $genieKey ]]; then
-    curl -s -X POST https://api.opsgenie.com/v2/alerts -H "Content-Type: application/json" -H "Authorization: GenieKey $genieKey" -d '{ "message": "Our block is out of sync." }'
+    curl -s -X POST https://api.opsgenie.com/v2/alerts -H "Content-Type: application/json" -H "Authorization: GenieKey $genieKey" -d "{ \"message\": \"Our block is out of sync on ${network} on ${HOSTNAME}.\" }"
   fi
   systemctl restart ${serviceName};
   echo ""
