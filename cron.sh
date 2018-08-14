@@ -4,7 +4,7 @@
 # If node is out of sync and slackhook is set, a message will be sent to slack
 # If node is out of sync and opsgeniekey is set, a message will be sent through opsgenie
 # Using crontab command:
-# */10 * * * * /home/foo/cron.sh rinkeby 8545 200 geth.service slackhook opsgeniekey >> /home/foo/cron.log 2>&1`
+# */10 * * * * /home/foo/cron.sh rinkeby 8545 geth.service 200 slackhook opsgeniekey >> /home/foo/cron.log 2>&1`
 # to run this script every 10 mins.
 
 network=$1           # ethereum network in letters
